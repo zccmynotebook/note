@@ -1,0 +1,76 @@
+eslint [options] [file|dir|glob]*
+
+##Options
+  ###基本配置
+```
+  --no-eslintrc                  禁止使用源自 .eslintrc.*的配置
+  -c, --config path::String      使用指定的配置, 覆盖 .eslintrc.* 对应的配置选项(eslint -c ~/my-eslint.json file.js)
+  --env [String]                 指定环境
+  --ext [String]                 指定特定的js文件扩展，默认是 .js
+  --global [String]              定义全局变量
+  --parser String                指定解析器
+  --parser-options Object        指定解析选项
+
+    --global 定义的全局变量，在应用时不会被no-undef规则标记，但是这个指定的全局变量默认是只读的，在后面加个：true保证可写；如：
+    eslint --global require --global exports:true
+    require是只读的，export读写均可；
+```
+### 指定规则和插件
+```
+  --rulesdir [path::String]      在这个目录下使用额外的规则
+  --plugin [String]              指定插件
+  --rule Object                  指定规则
+```  
+### 修复问题
+```
+  --fix                          自动修复问题
+  --fix-dry-run                  自动修复问题，但是不会自动保存修改结果
+  --fix-type Array               指定要修改的类型 (problem, suggestion, layout)
+```
+### 忽略文件
+```
+ --ignore-path path::String     指定要忽略文件的路径
+ --no-ignore                    禁止忽略文件
+ --ignore-pattern [String]      忽略文件的匹配模式 (除了在 .eslintignore以外的内容)
+```
+### 使用标准输入
+```
+ --stdin                        这个选项告诉eslint读和规范的源代码来自标准输入，而不是文件，可以这样使用cat myfile.js | eslint --stdin
+ --stdin-filename String        Specify filename to process STDIN as
+```
+### 处理警告
+```
+--quiet                        只报告错误 - 默认值: false
+--max-warnings Int             指定警告达到一定数目触发非0退出 - default: -1
+```
+### 输出
+```
+ -o, --output-file path::String  报告输出的位置
+ -f, --format String             指定输出的格式 - default: stylish
+ --color, --no-color             使用或者禁用颜色
+```
+### 缓存
+```
+ --cache                         只检查修改的文件 - default: false
+  --cache-file path::String      Deprecated: use --cache-location - default: .eslintcache
+  --cache-location path::String  缓存文件或目录的路径
+```
+### 其他
+```
+--init                           运行配置的初始向导 - default: false
+  --debug                        输出调试信息
+  -h, --help                     帮助
+  -v, --version                  版本号
+  --print-config path::String    显示指定的配置文件
+```
+### Exit codes
+```
+0: Linting was successful and there are no linting errors. If the --max-warnings flag is set to n, the number of linting warnings is at most n.
+1: Linting was successful and there is at least one linting error, or there are more linting warnings than allowed by the --max-warnings option.
+2: Linting was unsuccessful due to a configuration problem or an internal error.
+```
+参数是数组格式的，可以逐个指定或者用逗号分隔参数列表；如
+>eslint --ext .jsx --ext .js lib/
+
+>eslint --ext .jsx,.js lib/
+

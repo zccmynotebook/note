@@ -1,0 +1,629 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:svg="http://www.w3.org/2000/svg" lang="en" xml:lang="en">
+<head>
+	<title>Fast CSS: How Browsers Lay Out Web Pages</title>
+	<link rel="stylesheet" type="text/css" href="./Fast CSS_ How Browsers Lay Out Web Pages_files/slides.css" />
+</head>
+<body class="slidelist">
+
+<div class="slide">
+<h1>Fast CSS: How Browsers Lay Out Web Pages</h1>
+
+<div style="text-align: center">
+David Baron, Mozilla
+<br /><a href="http://dbaron.org/">http://dbaron.org/</a>
+<br /><a href="https://twitter.com/#!/davidbaron">@davidbaron</a>
+<br />Slides: <a href="http://dbaron.org/talks/">http://dbaron.org/talks/</a>
+</div>
+</div>
+
+<div class="slide">
+<h1>This talk</h1>
+<p>
+This session explains the basic concepts in browser implementations of core Web document technologies (HTML, XHTML, CSS, and SVG), explains their general performance characteristics and how they interact with Javascript, and explains common optimizations (such as coalescing changes) that browsers make. Rather than presenting specific techniques authors can use, the goal is to build understanding of the performance characteristics of the Web platform so authors can have ideas of what things are likely to be fast or slow, and what types of changes they can experiment with to improve the performance of their Web pages.
+</p>
+</div>
+
+<div class="slide">
+<h1><em>Not</em> in this talk</h1>
+<ul>
+  <li>specific techniques</li>
+  <li>interaction with the network (resource loading)</li>
+</ul>
+</div>
+
+<div class="slide">
+<h1>The Pipeline from Markup to Graphics</h1>
+<!-- img doesn't load style sheets??? -->
+<object type="image/svg+xml" data="./Fast CSS_ How Browsers Lay Out Web Pages_files/pipeline.svg" style="display:block; height: 100%; width: 100%; font-size: 80px; stroke-width: 5px;" />
+</div>
+
+<div class="slide">
+<h1>Parsing</h1>
+
+<table border="border" width="100%">
+
+<tbody><tr><td width="50%">
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:block; height: 100%; width: 100%; font-size: 40px" preserveAspectRatio="xMidYMin meet" viewBox="0 0 750 275">
+<foreignobject x="0" y="0" width="750" height="275">
+<pre xmlns="http://www.w3.org/1999/xhtml">&lt;html&gt;&lt;head
+&gt;&lt;title&gt;Web page parsing&lt;/title&gt;&lt;/head
+&gt;&lt;div
+  &gt;&lt;h1&gt;Web page parsing&lt;/h1
+  &gt;&lt;p&gt;This is an example Web page.&lt;/p
+&gt;&lt;/div&gt;</pre>
+</foreignobject></svg>
+
+</td>
+
+<td width="50%">
+<svg xmlns="http://www.w3.org/2000/svg" style="display:block; height: 100%; width: 100%; font-size: 80px; stroke-width: 5px;" preserveAspectRatio="xMidYMin meet" viewBox="0 0 1500 1000">
+	<rect x="0" y="0" width="1500" height="1000" fill="white" />
+	<g style="stroke-width: 10px; stroke: black;">
+		<line x1="750" y1="100" x2="300" y2="300" />
+		<line x1="750" y1="100" x2="900" y2="300" />
+		<line x1="300" y1="300" x2="300" y2="500" />
+		<line x1="300" y1="500" x2="300" y2="700" />
+		<line x1="900" y1="300" x2="900" y2="500" />
+		<line x1="900" y1="500" x2="700" y2="700" />
+		<line x1="900" y1="500" x2="1100" y2="700" />
+		<line x1="550" y1="900" x2="700" y2="700" />
+		<line x1="1200" y1="900" x2="1100" y2="700" />
+	</g>
+
+	<ellipse cx="750" cy="100" rx="2em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="750" y="100" text-anchor="middle" dominant-baseline="middle">html</text>
+
+	<ellipse cx="300" cy="300" rx="2em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="300" y="300" text-anchor="middle" dominant-baseline="middle">head</text>
+
+	<ellipse cx="900" cy="300" rx="2em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="900" y="300" text-anchor="middle" dominant-baseline="middle">body</text>
+
+	<ellipse cx="300" cy="500" rx="2em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="300" y="500" text-anchor="middle" dominant-baseline="middle">title</text>
+
+	<ellipse cx="300" cy="700" rx="3.5em" ry="0.8em" fill="yellow" stroke="black" />
+	<text x="300" y="700" text-anchor="middle" dominant-baseline="middle">"Web p..."</text>
+
+	<ellipse cx="900" cy="500" rx="1.5em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="900" y="500" text-anchor="middle" dominant-baseline="middle">div</text>
+
+	<ellipse cx="700" cy="700" rx="1em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="700" y="700" text-anchor="middle" dominant-baseline="middle">h1</text>
+
+	<ellipse cx="1100" cy="700" rx="1em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="1100" y="700" text-anchor="middle" dominant-baseline="middle">p</text>
+
+	<ellipse cx="550" cy="900" rx="3.5em" ry="0.8em" fill="yellow" stroke="black" />
+	<text x="550" y="900" text-anchor="middle" dominant-baseline="middle">"Web p..."</text>
+
+	<ellipse cx="1200" cy="900" rx="3.5em" ry="0.8em" fill="yellow" stroke="black" />
+	<text x="1200" y="900" text-anchor="middle" dominant-baseline="middle">"This..."</text>
+
+
+</svg>
+</td></tr></tbody>
+</table>
+
+</div>
+
+<div class="slide">
+<h1>Content tree (DOM tree)</h1>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:block; height: 100%; width: 100%; font-size: 80px; stroke-width: 5px;" preserveAspectRatio="xMidYMin meet" viewBox="0 0 1700 1400">
+	<rect x="0" y="0" width="1500" height="1000" fill="white" />
+	<g style="stroke-width: 10px; stroke: black;">
+		<line x1="750" y1="100" x2="300" y2="300" />
+		<line x1="750" y1="100" x2="900" y2="300" />
+		<line x1="300" y1="300" x2="300" y2="500" />
+		<line x1="300" y1="500" x2="300" y2="700" />
+		<line x1="900" y1="300" x2="900" y2="500" />
+		<line x1="900" y1="500" x2="700" y2="700" />
+		<line x1="900" y1="500" x2="1100" y2="700" />
+		<line x1="350" y1="900" x2="700" y2="700" />
+		<line x1="1100" y1="700" x2="900" y2="900" />
+		<line x1="1100" y1="700" x2="1300" y2="900" />
+		<line x1="1300" y1="900" x2="1000" y2="1100" />
+		<line x1="1300" y1="900" x2="1500" y2="1100" />
+		<line x1="1500" y1="1100" x2="1400" y2="1300" />
+	</g>
+
+	<ellipse cx="750" cy="100" rx="2em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="750" y="100" text-anchor="middle" dominant-baseline="middle">html</text>
+
+	<ellipse cx="300" cy="300" rx="2em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="300" y="300" text-anchor="middle" dominant-baseline="middle">head</text>
+
+	<ellipse cx="900" cy="300" rx="2em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="900" y="300" text-anchor="middle" dominant-baseline="middle">body</text>
+
+	<ellipse cx="300" cy="500" rx="2em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="300" y="500" text-anchor="middle" dominant-baseline="middle">title</text>
+
+	<ellipse cx="300" cy="700" rx="3.5em" ry="0.8em" fill="yellow" stroke="black" />
+	<text x="300" y="700" text-anchor="middle" dominant-baseline="middle">"Web p..."</text>
+
+	<ellipse cx="900" cy="500" rx="1.5em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="900" y="500" text-anchor="middle" dominant-baseline="middle">div</text>
+
+	<ellipse cx="700" cy="700" rx="1em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="700" y="700" text-anchor="middle" dominant-baseline="middle">h1</text>
+
+	<ellipse cx="350" cy="900" rx="3.5em" ry="0.8em" fill="yellow" stroke="black" />
+	<text x="350" y="900" text-anchor="middle" dominant-baseline="middle">"Web p..."</text>
+
+	<ellipse cx="1100" cy="700" rx="2em" ry="0.8em" fill="lime" stroke="black" />
+	<text x="1100" y="700" text-anchor="middle" dominant-baseline="middle">svg</text>
+
+	<ellipse cx="900" cy="900" rx="2em" ry="0.8em" fill="lime" stroke="black" />
+	<text x="900" y="900" text-anchor="middle" dominant-baseline="middle">line</text>
+
+	<ellipse cx="1300" cy="900" rx="1em" ry="0.8em" fill="lime" stroke="black" />
+	<text x="1300" y="900" text-anchor="middle" dominant-baseline="middle">g</text>
+
+	<ellipse cx="1000" cy="1100" rx="3em" ry="0.8em" fill="lime" stroke="black" />
+	<text x="1000" y="1100" text-anchor="middle" dominant-baseline="middle">ellipse</text>
+
+	<ellipse cx="1500" cy="1100" rx="2em" ry="0.8em" fill="lime" stroke="black" />
+	<text x="1500" y="1100" text-anchor="middle" dominant-baseline="middle">text</text>
+
+	<ellipse cx="1400" cy="1300" rx="3.5em" ry="0.8em" fill="yellow" stroke="black" />
+	<text x="1400" y="1300" text-anchor="middle" dominant-baseline="middle">"This..."</text>
+
+
+</svg>
+</div>
+
+<div class="slide">
+<h1>The Pipeline from Markup to Graphics</h1>
+<!-- img doesn't load style sheets??? -->
+<object type="image/svg+xml" data="./Fast CSS_ How Browsers Lay Out Web Pages_files/pipeline.svg" style="display:block; height: 100%; width: 100%; font-size: 80px; stroke-width: 5px;" />
+</div>
+
+<div class="slide">
+<h1>Frame tree (rendering tree)</h1>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:block; height: 100%; width: 100%; font-size: 80px; stroke-width: 5px;" preserveAspectRatio="xMidYMin meet" viewBox="0 -400 2400 1600">
+	<rect x="0" y="-400" width="2400" height="1600" fill="white" />
+	<g style="stroke-width: 10px; stroke: black;">
+		<line x1="750" y1="100" x2="300" y2="300" />
+		<line x1="750" y1="100" x2="750" y2="-100" />
+		<line x1="750" y1="100" x2="900" y2="300" />
+		<line x1="300" y1="300" x2="300" y2="500" />
+		<line x1="300" y1="500" x2="300" y2="700" />
+		<line x1="900" y1="300" x2="900" y2="500" />
+		<line x1="900" y1="500" x2="700" y2="700" />
+		<line x1="900" y1="500" x2="1100" y2="700" />
+		<line x1="550" y1="900" x2="700" y2="700" />
+		<line x1="1200" y1="900" x2="1100" y2="700" />
+	</g>
+
+	<text x="750" y="-300" text-anchor="middle" dominant-baseline="middle">Content Tree / DOM Tree</text>
+	<text x="1875" y="-300" text-anchor="middle" dominant-baseline="middle">Frame Tree / Rendering Tree</text>
+
+	<ellipse cx="750" cy="-100" rx="3.5em" ry="0.8em" fill="orange" stroke="black" />
+	<text x="750" y="-100" text-anchor="middle" dominant-baseline="middle">Document</text>
+
+	<ellipse cx="750" cy="100" rx="2em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="750" y="100" text-anchor="middle" dominant-baseline="middle">html</text>
+
+	<ellipse cx="300" cy="300" rx="2em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="300" y="300" text-anchor="middle" dominant-baseline="middle">head</text>
+
+	<ellipse cx="900" cy="300" rx="2em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="900" y="300" text-anchor="middle" dominant-baseline="middle">body</text>
+
+	<ellipse cx="300" cy="500" rx="2em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="300" y="500" text-anchor="middle" dominant-baseline="middle">title</text>
+
+	<ellipse cx="300" cy="700" rx="3.5em" ry="0.8em" fill="yellow" stroke="black" />
+	<text x="300" y="700" text-anchor="middle" dominant-baseline="middle">"Web p..."</text>
+
+	<ellipse cx="900" cy="500" rx="1.5em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="900" y="500" text-anchor="middle" dominant-baseline="middle">div</text>
+
+	<ellipse cx="700" cy="700" rx="1em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="700" y="700" text-anchor="middle" dominant-baseline="middle">h1</text>
+
+	<ellipse cx="1100" cy="700" rx="1em" ry="0.8em" fill="aqua" stroke="black" />
+	<text x="1100" y="700" text-anchor="middle" dominant-baseline="middle">p</text>
+
+	<ellipse cx="550" cy="900" rx="3.5em" ry="0.8em" fill="yellow" stroke="black" />
+	<text x="550" y="900" text-anchor="middle" dominant-baseline="middle">"Web p..."</text>
+
+	<ellipse cx="1200" cy="900" rx="3.5em" ry="0.8em" fill="yellow" stroke="black" />
+	<text x="1200" y="900" text-anchor="middle" dominant-baseline="middle">"This..."</text>
+
+	<g marker-start="url(slides-res.svg#StartArrowhead)" marker-end="url(slides-res.svg#Arrowhead)" color="black" stroke="currentColor" stroke-width="15" fill="none">
+		<path opacity="0.5" d="M 1730 -100 C 1700 -100 1100 -100 940 40" />
+		<path opacity="0.5" d="M 1820 50 L 960 100" />
+		<path opacity="0.5" d="M 1820 200 C 1700 200 1000 200 940 160" />
+		<path opacity="0.5" d="M 1820 350 L 1110 300" />
+		<path opacity="0.5" d="M 1820 500 L 1070 500" />
+		<path opacity="0.5" d="M 1620 680 C 1400 550 1000 550 820 650" />
+		<path opacity="0.5" d="M 2020 750 C 1800 825 1400 825 1220 750" />
+		<path opacity="0.5" d="M 1800 970 C 1600 1200 700 1200 600 1010" />
+		<path opacity="0.5" d="M 2200 970 C 2000 1200 1300 1200 1200 1010" />
+	</g>
+
+	<!-- the frame tree -->
+
+	<g style="stroke-width: 10px; stroke: black;">
+		<line x1="2000" y1="-100" x2="2000" y2="50" />
+		<line x1="2000" y1="50" x2="2000" y2="200" />
+		<line x1="2000" y1="200" x2="2000" y2="350" />
+		<line x1="2000" y1="350" x2="2000" y2="500" />
+		<line x1="2000" y1="500" x2="1800" y2="700" />
+		<line x1="2000" y1="500" x2="2200" y2="700" />
+		<line x1="1800" y1="700" x2="1800" y2="900" />
+		<line x1="2200" y1="700" x2="2200" y2="900" />
+	</g>
+
+	<rect x="2000" y="-100" transform="translate(-240 -52)" width="6em" height="1.3em" fill="#ff3" stroke="black" />
+	<text x="2000" y="-100" text-anchor="middle" dominant-baseline="middle">Viewport</text>
+
+	<rect x="2000" y="50" transform="translate(-160 -52)" width="4em" height="1.3em" fill="#3ff" stroke="black" />
+	<text x="2000" y="50" text-anchor="middle" dominant-baseline="middle">Scroll</text>
+
+	<rect x="2000" y="200" transform="translate(-160 -52)" width="4em" height="1.3em" fill="#f6f" stroke="black" />
+	<text x="2000" y="200" text-anchor="middle" dominant-baseline="middle">Block</text>
+
+	<rect x="2000" y="350" transform="translate(-160 -52)" width="4em" height="1.3em" fill="#f6f" stroke="black" />
+	<text x="2000" y="350" text-anchor="middle" dominant-baseline="middle">Block</text>
+
+	<rect x="2000" y="500" transform="translate(-160 -52)" width="4em" height="1.3em" fill="#f6f" stroke="black" />
+	<text x="2000" y="500" text-anchor="middle" dominant-baseline="middle">Block</text>
+
+	<rect x="1800" y="700" transform="translate(-160 -52)" width="4em" height="1.3em" fill="#f6f" stroke="black" />
+	<text x="1800" y="700" text-anchor="middle" dominant-baseline="middle">Block</text>
+
+	<rect x="2200" y="700" transform="translate(-160 -52)" width="4em" height="1.3em" fill="#f6f" stroke="black" />
+	<text x="2200" y="700" text-anchor="middle" dominant-baseline="middle">Block</text>
+
+	<rect x="1800" y="900" transform="translate(-160 -52)" width="4em" height="1.3em" fill="#f93" stroke="black" />
+	<text x="1800" y="900" text-anchor="middle" dominant-baseline="middle">Text</text>
+
+	<rect x="2200" y="900" transform="translate(-160 -52)" width="4em" height="1.3em" fill="#f93" stroke="black" />
+	<text x="2200" y="900" text-anchor="middle" dominant-baseline="middle">Text</text>
+
+</svg>
+</div>
+
+<div class="slide">
+<h1>The Pipeline from Markup to Graphics</h1>
+<!-- img doesn't load style sheets??? -->
+<object type="image/svg+xml" data="./Fast CSS_ How Browsers Lay Out Web Pages_files/pipeline.svg" style="display:block; height: 100%; width: 100%; font-size: 80px; stroke-width: 5px;" />
+</div>
+
+<div class="slide">
+<h1>Optimization</h1>
+<dl>
+<dt>Unoptimized</dt>
+  <dd>Redo everything for any DOM/style change</dd>
+<dt>Optimizations</dt>
+  <dd>Skip entire steps</dd>
+  <dd>Skip part of a step</dd>
+  <dd>Coalesce changes</dd>
+</dl>
+<p>Optimizations can and do change</p>
+</div>
+
+<div class="slide">
+<h1>Skipping steps</h1>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:block; height: 100%; width: 100%; font-size: 50px; font-weight: bold; stroke-width: 5px;" preserveAspectRatio="xMidYMin meet" viewBox="0 0 1650 400">
+	<rect x="0" y="0" width="1500" height="1000" fill="white" />
+
+	<rect x="25" y="100" width="250" height="100" fill="fuchsia" stroke="black" />
+	<text x="150" y="150" text-anchor="middle" dominant-baseline="middle">Content</text>
+
+	<rect x="350" y="75" width="300" height="150" fill="yellow" stroke="black" />
+	<text x="500" y="120" text-anchor="middle" dominant-baseline="middle">Compute</text>
+	<text x="500" y="180" text-anchor="middle" dominant-baseline="middle">style</text>
+
+	<rect x="725" y="75" width="300" height="150" fill="yellow" stroke="black" />
+	<text x="875" y="120" text-anchor="middle" dominant-baseline="middle">Construct</text>
+	<text x="875" y="180" text-anchor="middle" dominant-baseline="middle">frames</text>
+
+	<rect x="1100" y="100" width="250" height="100" fill="yellow" stroke="black" />
+	<text x="1225" y="150" text-anchor="middle" dominant-baseline="middle">Layout</text>
+
+	<rect x="1425" y="100" width="200" height="100" fill="yellow" stroke="black" />
+	<text x="1525" y="150" text-anchor="middle" dominant-baseline="middle">Paint</text>
+
+	<g marker-end="url(slides-res.svg#Arrowhead2)" color="black" stroke="currentColor" stroke-width="10" fill="none">
+		<path d="M 275 150 l 55 0" />
+		<path d="M 650 150 l 55 0" />
+		<path d="M 1025 150 l 55 0" />
+		<path d="M 1350 150 l 55 0" />
+	</g>
+
+	<text x="690" y="350" text-anchor="middle" dominant-baseline="middle">Now shown separately</text>
+
+	<g marker-end="url(slides-res.svg#Arrowhead2)" color="black" stroke="currentColor" stroke-width="7" fill="none">
+		<path d="M 650 330 l -20 -80" />
+		<path d="M 730 330 l 20 -80" />
+	</g>
+
+</svg>
+</div>
+
+<div class="slide">
+<h1>Skipping steps</h1>
+<object type="image/svg+xml" data="./Fast CSS_ How Browsers Lay Out Web Pages_files/skipping-steps.svg" style="display:block; height: 100%; width: 100%; font-size: 80px; stroke-width: 5px;" />
+</div>
+
+<div class="slide">
+<h1>Skipping steps</h1>
+
+<pre>
+&lt;script&gt;
+  div.setAttribute("data-rating", "excellent");
+&lt;/script&gt;
+</pre>
+
+<p>Browsers can check whether there are selectors that care about this
+attribute, and as a result not even compute style.</p>
+
+</div>
+
+<div class="slide">
+<h1>Skipping steps</h1>
+<object type="image/svg+xml" data="./Fast CSS_ How Browsers Lay Out Web Pages_files/skipping-steps.svg" style="display:block; height: 100%; width: 100%; font-size: 80px; stroke-width: 5px;" />
+</div>
+
+<div class="slide">
+<h1>Skipping steps</h1>
+
+<pre>
+&lt;script&gt;
+  div.setAttribute("data-rating", "excellent");
+&lt;/script&gt;
+&lt;style&gt;
+  #list div[data-rating="excellent"] {
+    background: yellow; color: black;
+  }
+&lt;/style&gt;
+</pre>
+
+<p>Now there are selectors, so we have to rerun selector matching.  But
+if the div isn't inside an element with <code>id="list"</code>, nothing
+changed.</p>
+
+</div>
+
+<div class="slide">
+<h1>Skipping steps</h1>
+<object type="image/svg+xml" data="./Fast CSS_ How Browsers Lay Out Web Pages_files/skipping-steps.svg" style="display:block; height: 100%; width: 100%; font-size: 80px; stroke-width: 5px;" />
+</div>
+
+<div class="slide">
+<h1>Skipping steps</h1>
+
+<pre>
+&lt;script&gt;
+  div.setAttribute("data-rating", "excellent");
+&lt;/script&gt;
+&lt;style&gt;
+  div[data-rating="excellent"] {
+    background: yellow; color: black;
+  }
+&lt;/style&gt;
+</pre>
+
+<p>Now the rerunning of selector matching actually makes a new rule
+match that didn't before.</p>
+</div>
+
+<div class="slide">
+<h1>Skipping steps</h1>
+<object type="image/svg+xml" data="./Fast CSS_ How Browsers Lay Out Web Pages_files/skipping-steps.svg" style="display:block; height: 100%; width: 100%; font-size: 80px; stroke-width: 5px;" />
+</div>
+
+<div class="slide">
+<h1>Skipping steps</h1>
+
+<p>This is how one browser optimizes today.  It might change.</p>
+
+</div>
+
+<div class="slide">
+<h1>Skipping steps: handling a style change</h1>
+<p>OK, so new rules matched?  Let's figure out what properties changed.</p>
+</div>
+
+<div class="slide">
+<h1>Skipping steps: Some properties that make us reconstruct frames / rendering objects</h1>
+
+<pre>display
+position
+float (from/to 'none')
+transform (from/to 'none')
+column-*
+counter-*
+quotes</pre>
+</div>
+
+<div class="slide">
+<h1>Skipping steps: Some properties that make us reflow / lay out again</h1>
+
+<pre>width
+height
+font-*
+margin-*
+padding-*
+border-*-width
+letter-spacing
+word-spacing
+line-height</pre>
+
+
+</div>
+
+<div class="slide">
+<h1>Skipping steps: Some properties that make us repaint</h1>
+<pre>color
+background-*
+border-*-color
+z-index</pre>
+
+</div>
+
+<div class="slide">
+<h1>Skipping steps: handling a style change</h1>
+
+<p>Or maybe nothing changed:</p>
+
+<pre>
+p { background: yellow }
+p:hover { background: yellow }
+</pre>
+</div>
+
+<div class="slide">
+<h1>Skipping steps</h1>
+<object type="image/svg+xml" data="./Fast CSS_ How Browsers Lay Out Web Pages_files/skipping-steps.svg" style="display:block; height: 100%; width: 100%; font-size: 80px; stroke-width: 5px;" />
+</div>
+
+<div class="slide">
+<h1>Skipping steps: Some properties that have custom optimizations</h1>
+<!-- to optimize better, or for other reasons -->
+<pre>transform
+cursor</pre>
+</div>
+
+<div class="slide">
+<h1>Coalescing</h1>
+<p>Authors might change the same element twice:</p>
+<pre>element.style.position = "absolute";
+element.style.overflow = "auto";</pre>
+</div>
+
+<div class="slide">
+<h1>Coalescing</h1>
+<p>Authors might make changes where the work needed to handle one subsumes the work for the other:</p>
+<pre>element.style.backgroundColor = "blue";
+element.parentNode.style.opacity = "0.8";</pre>
+</div>
+
+<div class="slide">
+<h1>Coalescing</h1>
+<p>Browsers don't actually process the changes until:</p>
+<ul>
+  <li>It's time to redraw</li>
+  <li>Script asks for something (e.g., style, positions, sizes) that requires processing them</li>
+</ul>
+</div>
+
+<div class="slide">
+<h1>Coalescing: some things that flush style / frame construction</h1>
+<pre>getComputedStyle(element, "").color</pre>
+<p>(Maybe Gecko-specific; might only flush style)</p>
+</div>
+
+<div class="slide">
+<h1>Coalescing: some things that flush layout</h1>
+<pre>getComputedStyle(element, "").width
+element.offsetTop</pre>
+</div>
+
+<div class="slide">
+<h1>Coalescing</h1>
+<p>DO NOT DO THIS:</p>
+<pre>for (var i = 0; i &lt; n; ++i) {
+  var photo = document.getElementById("photo" + i);
+  var label = document.getElementById("label" + i);
+  label.style.top = photo.offsetHeight + "px";
+}</pre>
+<p>These can sometimes be hidden in frameworks.</p>
+
+</div>
+
+<div class="slide">
+<h1>Skipping part of frame construction / rendering tree construction</h1>
+
+<ul>
+  <li>Reconstructing a frame implies reconstructing all its descendants</li>
+  <li>There's a tiny cost resulting from the depth of the tree it's in</li>
+  <li>Otherwise cost is mostly proportional to the number of boxes / frames / rendering objects constructed</li>
+</ul>
+</div>
+
+<div class="slide">
+<h1>Skipping part of frame construction / rendering tree construction</h1>
+<pre>&lt;script&gt;
+/* likely Gecko-specific */
+function flush_frames(elt)
+  { getComputedStyle(elt, "").color; }
+var start = Date.now();
+for (var i = 0; i &lt; 10000; ++i) {
+  test_elt.style.display = "none";
+  flush_frames(test_elt);
+  test_elt.style.display = "";
+  flush_frames(test_elt);
+}
+var time = (Date.now() - start);
+&lt;/script&gt;</pre>
+</div>
+
+<div class="slide">
+<h1>Skipping part of reflow</h1>
+<ul>
+  <li>When layout of one element changes, it can move others around</li>
+  <li>Reflow / re-layout runs from the top of the tree down to the things it needs to change</li>
+  <li>intrinsic width computation a separate issue</li>
+  <li>Some properties force relayout of all descendants; some don't</li>
+  <li>So cost of layout depends on surroundings</li>
+  <li>Experiment with surroundings.</li>
+</ul>
+</div>
+
+<div class="slide">
+<h1>Skipping part of reflow</h1>
+<pre>&lt;script&gt;
+function flush_layout(elt) { elt.offsetTop; }
+var start = Date.now();
+for (var i = 0; i &lt; 10000; ++i) {
+  test_elt.style.fontSize = "1px"; /* or width */
+  flush_frames(test_elt);
+  test_elt.style.fontSize = ""; /* or width */
+  flush_frames(test_elt);
+}
+var time = (Date.now() - start);
+&lt;/script&gt;</pre>
+</div>
+
+<!--
+FIXME: ADD FIGURE
+-->
+
+<div class="slide">
+<h1>Skipping part of painting</h1>
+<ul>
+  <li>Repainting an area is about painting a rectangle.</li>
+  <li>Harder to measure because browser controls refresh rate</li>
+  <li>Some ways to spot very bad cases, but vary based on OS and browser</li>
+  <!-- FIXME: better? -->
+</ul>
+</div>
+
+<div class="slide">
+<h1>Thanks</h1>
+
+<dl>
+  <dt>This talk</dt>
+  <dd><a href="http://dbaron.org/talks/">http://dbaron.org/talks/</a></dd>
+
+  <dt>Other links</dt>
+  <dd><a href="https://developer.mozilla.org/en/DOM/window.requestAnimationFrame">window.requestAnimationFrame</a> for hooking in to the browser's refresh cycle</dd>
+  <dd><a href="http://stevesouders.com/">http://stevesouders.com/</a>, for making sites <em>load</em> quickly</dd>
+
+</dl>
+</div>
+
+<!--
+FIXME: TALK MORE ABOUT EXPERIMENTATION
+-->
+
+</body>
+</html>

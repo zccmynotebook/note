@@ -1,3 +1,8 @@
+---
+title: generate 函数
+tags: es6
+---
+
 ```
 function *foo(x){
   let y=x * (yield 'hello')

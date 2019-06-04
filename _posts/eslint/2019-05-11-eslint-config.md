@@ -1,3 +1,8 @@
+---
+title: eslint config 翻译
+tags: eslint config 翻译
+---
+
 # 配置
 ```
 eslint 是完全可配置的，意味着你可以关掉所有的验证规则，只要基本的语法是正确的，或者在项目中混合使用你定制的规则和绑定的规则。有2种方法配置eslint:

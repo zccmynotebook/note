@@ -2,20 +2,8 @@
   "name": "jekyll-text-theme",
   "version": "2.2.4",
   "description": "A super customizable Jekyll theme for personal site, team site, blog, project, documentation, etc.",
-  "scripts": {
-    "build": "cross-env JEKYLL_ENV=production bundle exec jekyll build",
-    "serve": "bundle exec jekyll serve",
-    "Gemfile.lock": "docker run --rm -v \"$PWD\":/usr/src/app -w /usr/src/app ruby:2.6 bundle install",
-     
-    "default": "bundle exec jekyll serve -H 0.0.0.0 -t",
-    "dev": "bundle exec jekyll serve -H 0.0.0.0 -t --config ./docs/_config.dev.yml",
-     
-    "eslint": "eslint \"_includes/**/*.js\"",
-    "eslint-fix": "eslint \"_includes/**/*.js\" --fix",
-    "stylelint": "stylelint --syntax scss \"_sass/**/*.scss\"",
-    "stylelint-fix": "stylelint --syntax scss \"_sass/**/*.scss\" --fix",
-    "gem-build": "rm -fv jekyll-text-theme-*.gem && gem build jekyll-text-theme.gemspec",
-    "gem-push": "gem push jekyll-text-theme-*.gem"
+  "scripts": {  
+    "serve": "bundle exec jekyll serve"
   },
   "repository": {
     "type": "git",

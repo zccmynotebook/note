@@ -1,6 +1,6 @@
 ---
 title: Chrome 工具
-tags: 备忘录
+tags: 浏览器
 ---
 ### 利用 Chrome 浏览器的开发者工具截取整个页面
 打开 Chrome 浏览器，进入需要截图的网站页面

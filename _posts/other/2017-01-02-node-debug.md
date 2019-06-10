@@ -1,6 +1,6 @@
 ---
 title: node debug
-tags: 备忘录
+tags: node
 ---
 1.	node  filename  –inspect-brk=9229
 2.	chrome://insepect

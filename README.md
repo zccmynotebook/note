@@ -2,5 +2,5 @@
  use jekyll-TeXt-theme,thanks the author;
  [visit](https://zccmynotebook.github.io/)
 
- - bundle install          
- - bundle exec jekyll serve
+ - bundle install 
+ - npm run serve

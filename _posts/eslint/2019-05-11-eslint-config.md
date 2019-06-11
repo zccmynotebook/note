@@ -5,9 +5,12 @@ tags: eslint config 翻译
 
 # 配置
 ```
-eslint 是完全可配置的，意味着你可以关掉所有的验证规则，只要基本的语法是正确的，或者在项目中混合使用你定制的规则和绑定的规则。有2种方法配置eslint:
+eslint 是完全可配置的，意味着你可以关掉所有的验证规则，只要基本的语法是正确的，或者在项目中混合使用你定制的规则和绑定的规则。
+有2种方法配置eslint:
 1.注释模式---使用js注释，直接将配置信息嵌入js文件
-2.配置文件---使用js,json,yaml文件指定整个目录及其子目录的配置信息。可以是.eslintrc.*(*代表不同类型的文件后缀)或者在package.json中添加eslintConfig字段，这2种方法，eslint都会自动查找读取，或者也可以在命令行中指定一个配置文件；
+2.配置文件---使用js,json,yaml文件指定整个目录及其子目录的配置信息。
+  可以是.eslintrc.*(*代表不同类型的文件后缀)或者在package.json中添加eslintConfig字段，这2种方法，eslint都会自动查找读取，
+  或者也可以在命令行中指定一个配置文件；
 
 如果在home目录下有一个配置文件（~/），eslint如果找不到其他的配置文件就会用这个；
 下面这些内容都可以配置：
@@ -22,8 +25,8 @@ eslint 允许指定你想支持的js语言。默认是es5语法。你可以覆�
 
 注意，支持JSX语法不代表支持react,react使用jsx特定的语义，eslint识别不了。如果使用react建议使用eslint-plugin-react.
 同样，支持es6不代表完全支持新的es6全部内容。对于es6语法，使用{"parseOptions":{"ecmaVersion":6}},新增的es6全局变量，
-使用{"env":{"es6":true}},使用{"env":{"es6":true}}会自动开启es6语法，但是反之不行。.eslintrc.*文件中的parserOptions属性用于设置解析选项，
-下面是可选的内容：
+使用{"env":{"es6":true}},使用{"env":{"es6":true}}会自动开启es6语法，但是反之不行。
+.eslintrc.*文件中的parserOptions属性用于设置解析选项，下面是可选的内容：
 
 ecmaVersion-设为3，5，6，7，8，9，10指定需要使用的es语法版本，也可以使用年份，2015对应6
 sourceType-"script" (default) or "module"(代码在esmodules里时使用)
@@ -69,9 +72,11 @@ Esprima，abel-ESLint ，@typescript都是可以和eslint兼容的；
 环境预定义了一些全局变量，下面是可以使用的环境：
 browser - browser global variables.
 node - Node.js global variables and Node.js scoping.
-commonjs - CommonJS global variables and CommonJS scoping (use this for browser-only code that uses Browserify/WebPack).
+commonjs - CommonJS global variables and CommonJS scoping 
+           (use this for browser-only code that uses Browserify/WebPack).
 shared-node-browser - Globals common to both Node.js and Browser.
-es6 - enable all ECMAScript 6 features except for modules (this automatically sets the ecmaVersion parser option to 6).
+es6 - enable all ECMAScript 6 features except for modules 
+     (this automatically sets the ecmaVersion parser option to 6).
 worker - web workers global variables.
 amd - defines require() and define() as global variables as per the amd spec.
 mocha - adds all of the Mocha testing global variables.
@@ -268,7 +273,8 @@ settings对象里设置的规则会被每个应用执行的规则上；
 ```
 有2种方法使用配置文件：
 1.使用.eslintrc.* and package.json文件：
-eslint会在要检查的文件目录下自动查询.eslintrc.* and package.json文件，随后继续再递归查找父目录直到文件系统的根目录(除非指定root:true，
+eslint会在要检查的文件目录下自动查询.eslintrc.* and package.json文件，
+随后继续再递归查找父目录直到文件系统的根目录(除非指定root:true，
 eslint查到含有此字段的配置不再继续向上查找)；
 当你想给一个项目的不同部分使用不同的配置时，或者当你想让其他人直接使用eslint而不用传递配置文件时，这个选项是有用的。
 2.在命令行使用-c选项把文件位置传给cli，保存文件；
@@ -279,7 +285,8 @@ eslint -c myconfig.json myfiletotest.js
 ```
 JavaScript -  .eslintrc.js 导出一个包含配置的对象
 YAML - use .eslintrc.yaml or .eslintrc.yml to define the configuration structure.
-JSON - use .eslintrc.json to define the configuration structure. ESLint’s JSON files also allow JavaScript-style comments.
+JSON - use .eslintrc.json to define the configuration structure. 
+       ESLint’s JSON files also allow JavaScript-style comments.
 Deprecated - use .eslintrc, which can be either JSON or YAML.
 package.json - create an eslintConfig property in your package.json file and define your configuration there
 在同一个目录下，如果同时存在多个配置，只使用一个，优先级如下：
@@ -308,7 +315,9 @@ package.json
 -c, --config
 3.Project-level configuration:
   1）.eslintrc.* or package.json file in same directory as linted file
-  2）Continue searching for .eslintrc and package.json files in ancestor directories (parent has highest precedence, then grandparent, etc.), up to and including the root directory or until a config with "root": true is found.
+  2）Continue searching for .eslintrc and package.json files in ancestor directories 
+  (parent has highest precedence,then grandparent, etc.), up to and including the root directory or 
+  until a config with "root": true is found.
 4. (1) 到 (3)都没有, fall back to a personal default configuration in ~/.eslintrc.
 
 ```

@@ -22,7 +22,7 @@ url     : # the base hostname & protocol for your site e.g. https://www.someone.
 baseurl : # does not include hostname
 title   : 我的笔记
 description: > # this means to ignore newlines until "Language & timezone"
-  备忘录，前端，笔记，vue,webpack,js,css,html，npm,node,es6,babel，shell,linux,macos
+  备忘录，前端，笔记，vue,webpack,js,css,html，npm,node,es6,babel，shell,linux,macos,分享,zcc
 
 
 ## => Language and Timezone

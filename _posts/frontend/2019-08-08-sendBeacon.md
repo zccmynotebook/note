@@ -1,6 +1,6 @@
 ---
 title: sendBeacon
-tags: js
+tags: js,新技术
 ---
 >navigator.sendBeacon(url, data);
 如果浏览器成功的加入发送数据的队列，返回true,否则false;

@@ -9,3 +9,4 @@ Elasticsearch是面向文档型数据库，一条数据就是一个文档，用J
 关系数据库 ⇒ 数据库 ⇒ 表 ⇒ 行 ⇒ 列(Columns)
 Elasticsearch ⇒ 索引 ⇒ 类型 ⇒ 文档 ⇒ 字段(Fields)
 
+/{index}/{type}/{id}

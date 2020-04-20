@@ -51,7 +51,7 @@ module.exports = {
 2.使用SplitChunksPlugin阻止重复代码；
 3.动态加载；
 ```
->chunks的含义是拆分模块的范围，它有三个值async、initial和all。
+> chunks的含义是拆分模块的范围，它有三个值async、initial和all。
  - async表示只从异步加载的模块（动态加载import()）里面进行拆分
  - initial表示只从入口模块进行拆分
  - all表示以上两者都包括
